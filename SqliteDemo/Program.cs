@@ -12,6 +12,7 @@ namespace SqliteDemo
             try
             {
                 connection.Open();
+                CreateStudentsTable(connection);
             }
             catch (Exception e)
             {
@@ -21,6 +22,13 @@ namespace SqliteDemo
             {
                 connection.Close();
             }
+        }
+
+        private static void CreateStudentsTable(SQLiteConnection connetion)
+        {
+            var sql = "CREATE TABLE Students (name TEXT, year INTEGER, lastYearGrade REAL)";
+            var command = new SQLiteCommand(sql, connetion);
+            command.ExecuteNonQuery();
         }
     }
 }
