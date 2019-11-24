@@ -16,6 +16,8 @@ namespace SqliteDemo
                 connection.Open();
                 CreateStudentsTable(connection);
                 InsertStudents(connection);
+                ShowStudents(connection);
+                Console.ReadKey();
             }
             catch (Exception e)
             {
@@ -25,6 +27,26 @@ namespace SqliteDemo
             {
                 connection.Close();
             }
+        }
+
+        private static void ShowStudents(SQLiteConnection connection, string sortColumn = null)
+        {
+            var sql = $"SELECT * FROM Students";
+            if (sortColumn != null)
+            {
+                sql += " ORDER BY sortColumn";
+            }
+            var command = new SQLiteCommand(sql, connection);
+            var reader = command.ExecuteReader();
+
+            Console.WriteLine($"| {"Name",-30} | {"Year",-4} | {"LastYearGrade",-13} |");
+            Console.WriteLine(String.Empty.PadLeft(57, '-'));
+            while (reader.Read())
+            {
+                var val = reader.GetValues();
+                Console.WriteLine($"| {val["Name"],-30} | {val["Year"],-4} | {val["LastYearGrade"],-13} |");
+            }
+            Console.WriteLine(String.Empty.PadLeft(57, '-'));
         }
 
         private static void CreateStudentsTable(SQLiteConnection connection)
