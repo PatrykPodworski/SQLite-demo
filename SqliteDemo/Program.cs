@@ -77,7 +77,8 @@ namespace SqliteDemo
             {
                 Console.WriteLine("s [column] - sort by column");
                 Console.WriteLine("sd [column] - sort by column descending");
-                Console.WriteLine("d [column] [value] - delete rows by value in column");
+                Console.WriteLine("d [column]:[value] - delete rows by value in column");
+                Console.WriteLine("dn [column] - delete rows where NULL in column");
                 Console.WriteLine("h - help");
                 Console.WriteLine("q - quit");
                 return true;
@@ -88,17 +89,53 @@ namespace SqliteDemo
 
         private static bool HandleCommand(string command, string argument, SQLiteConnection connection)
         {
-            if (command == "s")
+            switch (command)
             {
-                ShowStudents(connection, argument);
-                return true;
+                case "s":
+                    ShowStudents(connection, argument);
+                    return true;
+
+                case "sd":
+                    ShowStudents(connection, argument, true);
+                    return true;
+
+                case "d":
+                    var result = DeleteStudents(connection, argument);
+                    ShowStudents(connection);
+                    return result;
+
+                case "dn":
+                    DeleteNullStudents(connection, argument);
+                    ShowStudents(connection);
+                    return true;
+
+                default:
+                    return false;
             }
-            if (command == "sd")
+        }
+
+        private static void DeleteNullStudents(SQLiteConnection connection, string column)
+        {
+            var sql = $"DELETE FROM Students WHERE {column} IS NULL";
+            var command = new SQLiteCommand(sql, connection);
+            command.ExecuteNonQuery();
+        }
+
+        private static bool DeleteStudents(SQLiteConnection connection, string argument)
+        {
+            var arguments = argument.Split(':');
+            if (arguments.Length != 2)
             {
-                ShowStudents(connection, argument, true);
-                return true;
+                return false;
             }
-            return false;
+
+            var column = arguments[0];
+            var value = arguments[1];
+
+            var sql = $"DELETE FROM Students WHERE {column} == {value}";
+            var command = new SQLiteCommand(sql, connection);
+            command.ExecuteNonQuery();
+            return true;
         }
 
         private static void ShowStudents(SQLiteConnection connection, string sortColumn = null, bool descending = false)
