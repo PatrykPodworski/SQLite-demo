@@ -17,7 +17,7 @@ namespace SqliteDemo
                 CreateStudentsTable(connection);
                 InsertStudents(connection);
                 ShowStudents(connection);
-                Console.ReadKey();
+                RunTheApplication(connection);
             }
             catch (Exception e)
             {
@@ -29,16 +29,86 @@ namespace SqliteDemo
             }
         }
 
-        private static void ShowStudents(SQLiteConnection connection, string sortColumn = null)
+        private static void RunTheApplication(SQLiteConnection connection)
         {
-            var sql = $"SELECT * FROM Students";
-            if (sortColumn != null)
+            var isRunning = true;
+            while (isRunning)
             {
-                sql += " ORDER BY sortColumn";
+                try
+                {
+                    Console.WriteLine("Provide a command:");
+                    var input = Console.ReadLine().Split(' ');
+
+                    if (input.Length == 1)
+                    {
+                        var command = input[0];
+                        if (HandleCommand(command, ref isRunning))
+                        {
+                            continue;
+                        }
+                    }
+                    if (input.Length == 2)
+                    {
+                        var command = input[0];
+                        var argument = input[1];
+                        if (HandleCommand(command, argument, connection))
+                        {
+                            continue;
+                        }
+                    }
+                    Console.WriteLine("Command is invalid.");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
+        }
+
+        private static bool HandleCommand(string command, ref bool isRunning)
+        {
+            if (command == "q")
+            {
+                Console.WriteLine("Closing the application.");
+                isRunning = false;
+                return true;
+            }
+            if (command == "h")
+            {
+                Console.WriteLine("s [column] - sort by column");
+                Console.WriteLine("sd [column] - sort by column descending");
+                Console.WriteLine("d [column] [value] - delete rows by value in column");
+                Console.WriteLine("h - help");
+                Console.WriteLine("q - quit");
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool HandleCommand(string command, string argument, SQLiteConnection connection)
+        {
+            if (command == "s")
+            {
+                ShowStudents(connection, argument);
+                return true;
+            }
+            if (command == "sd")
+            {
+                ShowStudents(connection, argument, true);
+                return true;
+            }
+            return false;
+        }
+
+        private static void ShowStudents(SQLiteConnection connection, string sortColumn = null, bool descending = false)
+        {
+            string sql = GetSelectQuery(sortColumn, descending);
+
             var command = new SQLiteCommand(sql, connection);
             var reader = command.ExecuteReader();
 
+            Console.WriteLine(String.Empty.PadLeft(57, '-'));
             Console.WriteLine($"| {"Name",-30} | {"Year",-4} | {"LastYearGrade",-13} |");
             Console.WriteLine(String.Empty.PadLeft(57, '-'));
             while (reader.Read())
@@ -47,6 +117,21 @@ namespace SqliteDemo
                 Console.WriteLine($"| {val["Name"],-30} | {val["Year"],-4} | {val["LastYearGrade"],-13} |");
             }
             Console.WriteLine(String.Empty.PadLeft(57, '-'));
+        }
+
+        private static string GetSelectQuery(string sortColumn, bool descending)
+        {
+            var sql = $"SELECT * FROM Students";
+            if (sortColumn != null)
+            {
+                sql += $" ORDER BY {sortColumn}";
+                if (descending)
+                {
+                    sql += $" DESC";
+                }
+            }
+
+            return sql;
         }
 
         private static void CreateStudentsTable(SQLiteConnection connection)
