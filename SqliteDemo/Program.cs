@@ -75,10 +75,10 @@ namespace SqliteDemo
             }
             if (command == "h")
             {
-                Console.WriteLine("s [column] - sort by column");
-                Console.WriteLine("sd [column] - sort by column descending");
-                Console.WriteLine("d [column]:[value] - delete rows by value in column");
-                Console.WriteLine("dn [column] - delete rows where NULL in column");
+                Console.WriteLine("s column:[second_column] - sort by column");
+                Console.WriteLine("sd column:[second_column] - sort by column descending");
+                Console.WriteLine("d column:value - delete rows by value in column");
+                Console.WriteLine("dn column - delete rows where NULL in column");
                 Console.WriteLine("h - help");
                 Console.WriteLine("q - quit");
                 return true;
@@ -138,9 +138,9 @@ namespace SqliteDemo
             return true;
         }
 
-        private static void ShowStudents(SQLiteConnection connection, string sortColumn = null, bool descending = false)
+        private static void ShowStudents(SQLiteConnection connection, string argument = null, bool descending = false)
         {
-            string sql = GetSelectQuery(sortColumn, descending);
+            string sql = GetSelectQuery(argument, descending);
 
             var command = new SQLiteCommand(sql, connection);
             var reader = command.ExecuteReader();
@@ -156,11 +156,12 @@ namespace SqliteDemo
             Console.WriteLine(String.Empty.PadLeft(57, '-'));
         }
 
-        private static string GetSelectQuery(string sortColumn, bool descending)
+        private static string GetSelectQuery(string argument, bool descending)
         {
             var sql = $"SELECT * FROM Students";
-            if (sortColumn != null)
+            if (argument != null)
             {
+                var sortColumn = string.Join(" ,", argument.Split(':'));
                 sql += $" ORDER BY {sortColumn}";
                 if (descending)
                 {
@@ -223,6 +224,12 @@ namespace SqliteDemo
                     Name = "Kazimierz Nowak",
                     Year = 5,
                     LastYearGrade = 2.94
+                },
+                new Student
+                {
+                    Name = "Wojtek Bałwan",
+                    Year = 5,
+                    LastYearGrade = 3.88
                 }
             };
         }
